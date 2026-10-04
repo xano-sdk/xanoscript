@@ -1,0 +1,87 @@
+{
+  "name": "@xano-sdk/xanoscript",
+  "version": "1.0.0",
+  "description": "Renders a Xano SDK workspace to XanoScript — the language the Xano engine runs. A file-for-file port of the engine's encoder, proven byte-for-byte against the engine's own golden corpus.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Xano",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "xano",
+    "xanosdk",
+    "xanoscript",
+    "toolchain",
+    "codegen"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xanots/xanoscript.git"
+  },
+  "homepage": "https://github.com/xanots/xanoscript#readme",
+  "bugs": {
+    "url": "https://github.com/xanots/xanoscript/issues"
+  },
+  "sideEffects": false,
+  "xanosdk": {
+    "kind": "toolchain",
+    "plugin": "./dist/plugin.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "xs:vendor": "tsx scripts/xs-engine/vendor-engine.ts",
+    "xs:corpus": "tsx scripts/xs-engine/sync-corpus.ts",
+    "xs:drift": "tsx scripts/xs-engine/drift.ts",
+    "xs:report": "tsx scripts/xs-engine/corpus-report.ts",
+    "audit:credentials": "bash scripts/scan-corpus-secrets.sh",
+    "prepublishOnly": "npm run build",
+    "release": "npm publish --access public",
+    "release:beta": "npm version prerelease --preid=beta -m \"chore(release): %s\" && npm publish --tag beta --access public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "@xano/sdk": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+    "lodash.snakecase": "4.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/lodash.snakecase": "^4.1.9",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@xano/sdk": "1.0.0",
+    "eslint": "^9.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.23.1",
+    "typescript": "^5.5.0",
+    "vitest": "^3.2.6",
+    "yaml": "^2.9.1"
+  }
+}
