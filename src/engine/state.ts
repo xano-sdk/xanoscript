@@ -1,5 +1,6 @@
+// Engine origin: CoroutineState and class statics.
 /**
- * The mutable render flags the engine keeps in CoroutineState / statics.
+ * The mutable render flags the engine keeps in process-wide state.
  *
  * The PHP encoder reads a handful of process-wide switches while rendering:
  * verbose (legacy `!var "x"` tags), the object-literal indent counter, the
@@ -12,21 +13,29 @@
 export type PipeMode = "pipes" | "filters" | "aggregates";
 
 export interface RenderState {
-  /** the engine's `isVerbose()` — legacy tagged rendering. Production output is minimal. */
+  // `isVerbose()`
+  /** Legacy tagged rendering. Production output is minimal. */
   verbose: boolean;
-  /** `Script.INDEX` — nesting depth while wrapping object/array literals. */
+  // `Script.INDEX`
+  /** Nesting depth while wrapping object/array literals. */
   index: number;
-  /** `Parser.QUOTE_MODE` — force a quote character for text (tests only). */
+  // `Parser.QUOTE_MODE`
+  /** Force a quote character for text (tests only). */
   quoteMode: '"' | "'" | null;
-  /** `Parser.QUOTE_MULTILINE` — allow `"""` blocks. */
+  // `Parser.QUOTE_MULTILINE`
+  /** Allow `"""` blocks. */
   multilineQuotes: boolean;
-  /** `Parser.TICK_MULTILINE` — allow ```` ``` ```` blocks. */
+  // `Parser.TICK_MULTILINE`
+  /** Allow ```` ``` ```` blocks. */
   multilineTicks: boolean;
-  /** `MultiLineValue.FORCE` — always emit block syntax for multi-line text. */
+  // `MultiLineValue.FORCE`
+  /** Always emit block syntax for multi-line text. */
   multilineForce: boolean;
-  /** redacted — which registry resolves pipe display names. */
+  // redacted
+  /** Which registry resolves pipe display names. */
   pipeMode: PipeMode;
-  /** redacted — the object being encoded (mocks resolve test names off it). */
+  // redacted
+  /** The object being encoded (mocks resolve test names off it). */
   contextStack: unknown[];
 }
 

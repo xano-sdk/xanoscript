@@ -463,7 +463,7 @@ const COMPARE_OPS = [
 const parseCache = new Map<string, ParsedResult>();
 
 export function xtFastParse(str: string, type = ""): ParsedResult {
-  const key = type + " " + str;
+  const key = type + "\u0000" + str;
   const cached = parseCache.get(key);
   if (cached) return cached;
   const ret = xtParse(str, type);

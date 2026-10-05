@@ -1,6 +1,6 @@
 {
   "name": "@xano-sdk/xanoscript",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Renders a Xano SDK workspace to XanoScript — the language the Xano engine runs. A file-for-file port of the engine's encoder, proven byte-for-byte against the engine's own golden corpus.",
   "type": "module",
   "license": "MIT",
@@ -17,11 +17,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xanots/xanoscript.git"
+    "url": "git+https://github.com/xano-sdk/xanoscript.git"
   },
-  "homepage": "https://github.com/xanots/xanoscript#readme",
+  "homepage": "https://github.com/xano-sdk/xanoscript#readme",
   "bugs": {
-    "url": "https://github.com/xanots/xanoscript/issues"
+    "url": "https://github.com/xano-sdk/xanoscript/issues"
   },
   "sideEffects": false,
   "xanosdk": {

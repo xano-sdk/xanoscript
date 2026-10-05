@@ -1,6 +1,6 @@
 # @xano-sdk/xanoscript
 
-Renders a [Xano SDK](https://github.com/xanots/sdk) workspace to **XanoScript** —
+Renders a [Xano SDK](https://github.com/xano-sdk/sdk) workspace to **XanoScript** —
 the language the Xano engine actually runs.
 
 > **Status: 1.0.x.** A toolchain module for the Xano SDK (`@xano/sdk` `>=1.0.0 <2.0.0`):
@@ -35,20 +35,6 @@ That is what makes a committed `xanoscript/` tree worth reading: a backend chang
 shows up in review as the XanoScript the engine will run, one file per object,
 beside the TypeScript that produced it.
 
-## Quick start (maintainers)
-
-```bash
-npm install
-npx vitest run            # the full suite, corpus included
-npm run xs:report         # the corpus, as pass/fail counts grouped by reason
-npm run typecheck
-npm run lint
-```
-
-`npm run xs:report` should print **1279 passed, 1 failed** — that one failure is
-a documented corpus artifact, recorded with its reason in
-`test/corpus-known-failures.json`.
-
 ## Layout
 
 | Path | What it is |
@@ -61,25 +47,24 @@ a documented corpus artifact, recorded with its reason in
 | `src/writer.ts` | the committed `xanoscript/` tree: write, check, README, placeholders |
 | `src/render-def.ts` | one def rendered alone — the only file needing the `@xano/sdk` peer |
 | `src/diff.ts` | document-aware comparison of two multidocs |
-| `vendor/xs-engine/` | generated engine data and the commit lock (never hand-edited) |
-| `scripts/xs-engine/` | the drift loop — vendor, sync, drift, report |
+| `vendor/xs-engine/` | the engine's kind and pipe data the emitter reads, generated (never hand-edited) |
 
 ## The emitter takes no peer
 
 Everything under `src/` imports nothing from `@xano/sdk` except
 `render-def.ts`. The `.` entry builds and its suite passes with the peer absent,
-and `test/peer-free.test.ts` asserts it. That isolation is why this package can
+and the suite asserts it file by file. That isolation is why this package can
 follow the engine's release cadence instead of the SDK's.
 
-## Contributing
+## Issues and source
 
-Read `AGENTS.md` in the repository first — **especially the disclosure block at
-the top**. It carries the drift loop, the porting order, the coercion-semantics
-rule, and the redaction procedure for a credential found in the corpus.
+This repository carries the source of each release, one commit per release.
+Development, the test suite and the golden corpus live in a private repository,
+because the corpus is the engine's own and the tooling reads an engine checkout.
 
-`AGENTS.md` is deliberately NOT in the published tarball: it describes the
-engine's internal layout, which belongs in the repository and not on a public
-registry. See the disclosure block for what that constrains.
+Bugs and requests are welcome as [issues](https://github.com/xano-sdk/xanoscript/issues).
+A wrong rendering is most useful with the TypeScript def that produced it, the
+`.xs` the emitter wrote, and what the engine renders for the same object.
 
 ## License
 
