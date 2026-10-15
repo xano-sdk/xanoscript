@@ -28,6 +28,8 @@ export interface MultidocSections {
   addon?: Row[];
   toolset?: Row[];
   tool?: Row[];
+  prompt?: Row[];
+  resource?: Row[];
   trigger?: Row[];
   workflow_test?: Row[];
   realtime_server?: Row[];
@@ -114,7 +116,7 @@ function codePointCompare(a: string, b: string): number {
 /**
  * The engine renders most kinds in table order (the order they were created,
  * which is the order a bundle imports them), but its loaders for queries,
- * realtime servers, channels and messages sort by name. Stable, so rows that
+ * realtime servers, channels, messages, MCP prompts and resources sort by name. Stable, so rows that
  * share a name (a GET and a POST query) keep their payload order.
  */
 function sortedByName(list: Row[]): Row[] {
@@ -170,6 +172,8 @@ export function emitWorkspaceMultidoc(input: MultidocSections | { payload: Multi
   const addons = rows(payload.addon);
   const toolsets = rows(payload.toolset);
   const tools = rows(payload.tool);
+  const prompts = sortedByName(rows(payload.prompt));
+  const resources = sortedByName(rows(payload.resource));
   const triggers = rows(payload.trigger);
   const workflowTests = rows(payload.workflow_test);
   const servers = sortedByName(rows(payload.realtime_server));
@@ -214,6 +218,12 @@ export function emitWorkspaceMultidoc(input: MultidocSections | { payload: Multi
         register("toolset", byName(toolsets));
         ensureNamed(tools, "tool");
         register("tool", byName(tools));
+        // MCP prompts and resources ride the `ai` flag, registered before any
+        // document so an mcp_server renders its references by name.
+        ensureNamed(prompts, "prompt");
+        register("prompt", byName(prompts));
+        ensureNamed(resources, "resource");
+        register("resource", byName(resources));
       }
       if (include.action) {
         register("action", actionMap(actions));
@@ -261,11 +271,17 @@ export function emitWorkspaceMultidoc(input: MultidocSections | { payload: Multi
       }
 
       if (include.ai) {
+        register("prompt", byName(prompts));
+        register("resource", byName(resources));
+
         processItems("schema:agent", toolsets.filter((x) => x.type === "agent"), docs);
         processItems("schema:mcp_server", toolsets.filter((x) => x.type === "mcp"), docs);
         register("toolset", byName(toolsets));
         processItems("schema:tool", tools, docs);
         register("tool", byName(tools));
+
+        processItems("schema:prompt", prompts, docs);
+        processItems("schema:resource", resources, docs);
 
         const agentIds = toolsets.filter((x) => x.type === "agent").map(rowId);
         const mcpIds = toolsets.filter((x) => x.type === "mcp").map(rowId);

@@ -7,6 +7,7 @@ import { DbBulkDelete } from "./DbBulkDelete.js";
 import { DbBulkPatch } from "./DbBulkPatch.js";
 import { DbBulkUpdate } from "./DbBulkUpdate.js";
 import { DbEdit } from "./DbEdit.js";
+import { DbIncrement } from "./DbIncrement.js";
 import { DbTransaction } from "./DbTransaction.js";
 import { DirectQuery } from "./DirectQuery.js";
 import { ExternalMssqlDirectQuery } from "./ExternalMssqlDirectQuery.js";
@@ -23,6 +24,7 @@ export const DB_CLASSES: Record<string, ClassEncoder> = {
   DbBulkPatch,
   DbBulkUpdate,
   DbEdit,
+  DbIncrement,
   DbTransaction,
   DirectQuery,
   ExternalMssqlDirectQuery,

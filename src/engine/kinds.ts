@@ -37,6 +37,24 @@ function parseBlock(value: unknown): KindValue {
   return kind.parse(value);
 }
 
+/**
+ * A static:object[] value as its schema validates it: each element is one
+ * object's list of assign blocks. An empty object element arrives as a
+ * StdClass; here it is the empty block list it stands for.
+ */
+function objectListBlocks(value: unknown): unknown {
+  if (!isPhpArray(value)) return value;
+  const out = (Array.isArray(value) ? [...value] : { ...value }) as Record<string, unknown>;
+  for (const [k, element] of Object.entries(out)) {
+    if (element instanceof StdClass) out[k] = [];
+  }
+  return out;
+}
+
+function withObjectListBlocks(d: Record<string, unknown>): Record<string, unknown> {
+  return isPhpArray(d) && "value" in d ? { ...d, value: objectListBlocks(d.value) } : d;
+}
+
 function enumSchema(kind: string): string {
   return `enum|values(${JSON.stringify([kind])})`;
 }
@@ -157,7 +175,8 @@ export class StaticKind implements Kind {
         return result;
       }
       case "static:object[]": {
-        const ret = xsParse({ kind: enumSchema(this.getKind()), name: "text", "value[][]?=[]": "script_block" }, d, { block: parseBlock });
+        const dl = withObjectListBlocks(d);
+        const ret = xsParse({ kind: enumSchema(this.getKind()), name: "text", "value[][]?=[]": "script_block" }, dl, { block: parseBlock });
         const vals: Array<Record<string, unknown>> = [];
         for (const value1 of ret.value as KindValue[][]) {
           const values1: Record<string, unknown> = {};
@@ -165,7 +184,7 @@ export class StaticKind implements Kind {
           vals.push(values1);
         }
         const result = new StaticValue(ret.kind as string, this.getType(), ret.name as string, vals, ret.value);
-        result.setOriginalBlocks({ name: ret.name, kind: ret.kind, value: d.value });
+        result.setOriginalBlocks({ name: ret.name, kind: ret.kind, value: dl.value });
         return result;
       }
       default: {
@@ -246,7 +265,7 @@ export class StaticObjectListKind extends StaticKind {
   }
 
   override parse(data: unknown): KindValue {
-    const d = data as Record<string, unknown>;
+    const d = withObjectListBlocks(data as Record<string, unknown>);
     const ret = xsParse({ kind: enumSchema(this.getKind()), name: "text", "value[][]?=[]": "script_block" }, d, { block: parseBlock });
     const blocks = this.getBlocks();
     const listHash: Record<string, boolean> = {};

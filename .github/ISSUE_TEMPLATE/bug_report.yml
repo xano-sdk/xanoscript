@@ -1,0 +1,95 @@
+name: Bug report
+description: The XanoScript this module rendered is wrong, or the module failed.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A wrong rendering is fixable fastest with three
+        things side by side: the TypeScript def, the `.xs` this module wrote, and
+        what Xano renders for the same object.
+
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The `xanosdk` command (or the code) that triggered it.
+      render: shell
+      placeholder: npx xanosdk export ./xano/index.ts --out workspace.json
+    validations:
+      required: true
+
+  - type: textarea
+    id: def
+    attributes:
+      label: The TypeScript def
+      description: >-
+        The smallest def that reproduces it — one table, API or function is
+        usually enough. Redact any secret first.
+      render: typescript
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: >-
+        The `.xs` this module wrote, or the error message and stack trace — paste
+        it verbatim rather than summarizing it.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+      description: >-
+        For a wrong rendering, the XanoScript Xano shows for the same object
+        (or what `xanosdk preflight` reported).
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: "@xano-sdk/xanoscript version"
+      description: "`npm ls @xano-sdk/xanoscript`"
+      placeholder: 1.0.1
+    validations:
+      required: true
+
+  - type: input
+    id: sdk-version
+    attributes:
+      label: "@xano/sdk version"
+      description: "`npm ls @xano/sdk`, or the version the CLI printed."
+      placeholder: 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      description: "`node --version` (this module requires Node 20 or newer)."
+      placeholder: v22.11.0
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.1 / Ubuntu 24.04 / Windows 11
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Related issues, or what you already tried.
+    validations:
+      required: false

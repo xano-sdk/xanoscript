@@ -1,0 +1,18 @@
+# Blank issues stay on: a report that fits neither form is still worth having.
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/xano-sdk/xanoscript/security/advisories/new
+    about: >-
+      Do not open a public issue. Report it privately through a GitHub security
+      advisory — see SECURITY.md.
+  - name: Xano SDK (CLI, deploy, workspace authoring)
+    url: https://github.com/xano-sdk/sdk/issues
+    about: >-
+      For the `xanosdk` CLI and the `@xano/sdk` package rather than the
+      XanoScript rendering.
+  - name: Question about Xano itself
+    url: https://docs.xano.com
+    about: >-
+      For the Xano platform rather than this module — the product docs and Xano
+      support are the right place.

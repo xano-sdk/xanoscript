@@ -19,6 +19,8 @@ import { RealtimeChannel } from "./RealtimeChannel.js";
 import { RealtimeServer } from "./RealtimeServer.js";
 import { RealtimeServerTrigger } from "./RealtimeServerTrigger.js";
 import { RealtimeTrigger } from "./RealtimeTrigger.js";
+import { Prompt } from "./Prompt.js";
+import { Resource } from "./Resource.js";
 import { Tool } from "./Tool.js";
 
 export const KIND_CLASSES_B: Record<string, ClassEncoder> = {
@@ -41,5 +43,7 @@ export const KIND_CLASSES_B: Record<string, ClassEncoder> = {
   RealtimeServer,
   RealtimeServerTrigger,
   RealtimeTrigger,
+  Prompt,
+  Resource,
   Tool,
 };

@@ -45,6 +45,7 @@ export function Query(data: Record<string, unknown>): KindNode {
 
     Transform.onSchemaRequestHistory(data, ret);
     Transform.onSchemaCache(data, ret);
+    Transform.onSchemaExternalAccess(data, ret);
     Transform.onSchemaTesting(data, ret);
     Transform.onSchemaMiddlewareMapping(data, ret);
 

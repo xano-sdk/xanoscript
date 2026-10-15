@@ -1,4 +1,4 @@
-/** Call and misc statement transforms (ActionCall, ApiCall, ArrayMap, CloudJob*, GetRawInput, TaskCall, ToolCall, MarketItem, …). */
+/** Call and misc statement transforms (ActionCall, ApiCall, ArrayMap, CloudJob*, GetRawInput, TaskCall, ToolCall, MarketItem, McpElicit, …). */
 import type { ClassEncoder } from "../registry.js";
 import { ActionCall } from "./ActionCall.js";
 import { ActionPackageCall } from "./ActionPackageCall.js";
@@ -12,6 +12,7 @@ import { CloudJobAwait } from "./CloudJobAwait.js";
 import { CloudJobStatus } from "./CloudJobStatus.js";
 import { GetRawInput } from "./GetRawInput.js";
 import { MarketItem } from "./MarketItem.js";
+import { McpElicit } from "./McpElicit.js";
 import { MiddlewareCall } from "./MiddlewareCall.js";
 import { RunJob } from "./RunJob.js";
 import { RunService } from "./RunService.js";
@@ -34,6 +35,7 @@ export const CALL_CLASSES: Record<string, ClassEncoder> = {
   CloudJobStatus,
   GetRawInput,
   MarketItem,
+  McpElicit,
   MiddlewareCall,
   RunJob,
   RunService,

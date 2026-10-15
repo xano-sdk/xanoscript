@@ -17,7 +17,8 @@ export const StaticArray = {
 
     while (true) {
       str = ltrim(str);
-      if (phpEmpty(str)) break;
+      // "" only: "0" is a value, and a trailing 0 element must not end the loop.
+      if (str === "") break;
 
       const ret = Assign.parse(str, Assign.MODE_RIGHT);
 
@@ -75,10 +76,16 @@ export const StaticArray = {
 
     while (true) {
       str = ltrim(str);
-      if (phpEmpty(str)) break;
+      // "" only: "0" is a value, and a trailing 0 element must not end the loop.
+      if (str === "") break;
 
       const ret = Assign.parse(str, Assign.MODE_RIGHT);
       if (lastKind === null) lastKind = ret.result.kind;
+
+      // An empty {} parses with no `raw`, and "{}" is all the text it has.
+      if (ret.result.kind === "static:object" && ret.result.raw === undefined && phpEmpty(ret.result.value)) {
+        ret.result.raw = "{}";
+      }
 
       let value: unknown;
       if (ret.result.kind === "static:object") {
@@ -158,7 +165,7 @@ export const StaticArray = {
     let ret = retIn;
     let str = mbSubstr(ret, 1, -1);
     str = trim(str);
-    if (!phpEmpty(str)) {
+    if (str !== "") {
       try {
         const arrayRet = StaticArray.parseForReformat(str, true);
         if (!arrayRet.newline) {
@@ -167,8 +174,9 @@ export const StaticArray = {
           let lines: string[] | null = [];
           for (let value of arrayRet.value) {
             if (value instanceof RawValue) value = value.getValue();
+            // An empty [] has no `raw` either, so it arrives as a bare array.
             const s = String(value);
-            if (s.includes("\n")) {
+            if (typeof value === "string" && s.includes("\n")) {
               lines = null;
               break;
             }

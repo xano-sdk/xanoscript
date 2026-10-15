@@ -905,6 +905,13 @@ export const Transform = {
     (schema.blocks as KindNode[]).push(Transform.inlineAssign("cache", out, "static:object"));
   },
 
+  onSchemaExternalAccess(item: Record<string, unknown>, schema: KindNode): void {
+    // Emitted ONLY when disabled (default true), so a default endpoint's
+    // document is unchanged. A loose falsy check: a stored int 0 is disabled.
+    if (!phpEmpty(item.api_enabled ?? true)) return;
+    (schema.blocks as KindNode[]).push(Transform.inlineAssign("external_access", false, "static:bool"));
+  },
+
   onSchemaTesting(item: Record<string, unknown>, schema: KindNode): void {
     if (phpEmpty(item.test ?? [])) return;
     for (const test of Object.values((item.test ?? []) as object) as Array<Record<string, unknown>>) {
@@ -946,6 +953,63 @@ export const Transform = {
       }
     }
     (schema.blocks as KindNode[]).push(Transform.createStaticObject("tools", blocks, true));
+  },
+
+  /**
+   * The `prompts` / `resources` blocks of an mcp_server: references rendered
+   * by NAME with the same settings as a tool reference. An unresolvable
+   * reference is dropped; unlike `tools`, the block is OMITTED when empty.
+   */
+  onSchemaPrimitiveMapping(item: Record<string, unknown>, schema: KindNode, kind: "prompt" | "resource"): void {
+    const blocks: KindNode[][] = [];
+    for (const node of Object.values((item[kind] ?? []) as object) as unknown[]) {
+      try {
+        blocks.push(Transform.createSchemaPrimitiveAssignment(node, kind));
+      } catch {
+        // outside the export scope, or deleted
+      }
+    }
+    if (phpEmpty(blocks)) return;
+    (schema.blocks as KindNode[]).push(Transform.createStaticObject(kind + "s", blocks, true));
+  },
+
+  createSchemaPrimitiveAssignment(itemIn: unknown, kind: "prompt" | "resource"): KindNode[] {
+    const item = (itemIn instanceof StdClass ? {} : itemIn) as Record<string, unknown>;
+    const name = kind === "prompt" ? script().mapIdToPromptName(item.id ?? 0) : script().mapIdToResourceName(item.id ?? 0);
+
+    const blocks: KindNode[] = [];
+    blocks.push(Transform.inlineAssign("name", name));
+
+    const active = item.enabled ?? true;
+    if (phpEmpty(active)) blocks.push(Transform.inlineAssign("active", false, "static:bool"));
+
+    if (!phpEmpty(item.auth)) {
+      let authName: string;
+      try {
+        authName = script().mapIdToDboName(item.auth);
+      } catch {
+        authName = "";
+      }
+      if (authName !== "") blocks.push(Transform.inlineAssign("auth", authName));
+    }
+    return blocks;
+  },
+
+  /**
+   * A stored empty object `{}` arrives as a StdClass, which the encoders cannot
+   * index: it becomes `[]` ("not set"). With `deep` the walk also descends into
+   * nested objects and arrays (structural trees only, never assignment values).
+   */
+  objectToArray(value: unknown, deep = false): unknown {
+    if (value instanceof StdClass) value = [];
+    if (deep && isPhpArray(value)) {
+      const out = (Array.isArray(value) ? [...value] : { ...(value as Record<string, unknown>) }) as Record<string, unknown>;
+      for (const [k, v] of Object.entries(out)) {
+        if (v instanceof StdClass || isPhpArray(v)) out[k] = Transform.objectToArray(v, true);
+      }
+      return out;
+    }
+    return value;
   },
 
   createSchemaMiddlewareAssignment(item: Record<string, unknown>): KindNode[] {
@@ -1407,6 +1471,8 @@ export const Transform = {
       case "assign:auth":
         return "auth";
       case "static:bool[]":
+      case "static:decimal[]":
+      case "static:timestamp[]":
       case "static:json":
       case "static:int[]":
       case "static:text[]":
@@ -1526,8 +1592,11 @@ export const Transform = {
     const filters = Transform.parseFilters(filter as string | null);
     if (filters.length) {
       if (typeof value === "string" && value.startsWith('"')) {
-        value = parseGroup(value);
-        value = (value as string).substring(1, (value as string).length - 1);
+        // Strip the wrapping quotes only when the value is WHOLLY one quoted
+        // string; a quoted prefix of a longer expression (`"pre_" ~ $x`) keeps
+        // the whole value.
+        const group = parseGroup(value);
+        if (group === value) value = group.substring(1, group.length - 1);
       }
     }
     return { tag, [name]: value, filters };
@@ -1689,13 +1758,37 @@ export const Transform = {
     return value;
   },
 
+  /** `-$d` (a node the stack filter merged a sign into) right after a bare `-`. */
+  isSignedAfterSign(item: XtItem, before: XtItem[]): boolean {
+    const last = before[before.length - 1] ?? null;
+    return typeof item.node === "string" && item.node.startsWith("-") && (item.hint ?? "") !== "text"
+      && (last?.node ?? null) === "-" && (last?.hint ?? "") !== "text";
+  },
+
   renderStack(stack: XtItem[], isQuery = false): string {
     const items: string[] = [];
     let sep = "";
+    let last: string | null = null;
     for (const itemIn of stack) {
-      const item = Transform.getCompareNode(itemIn);
+      let item = itemIn;
+      // `($b|abs)`: parentheses the author wrote, which getCompareNode drops.
+      // A group that carries its own filter is not collapsed, and is not this.
+      const grouped = "group" in item && phpEmpty(item.pipes);
+      // `-(-$d)`: the parentheses the stack filter kept are part of the text.
+      if (!(last === "-" && grouped && count(item.group) === 1 && Transform.isSignedAfterSign((item.group as XtItem[])[0]!, [{ node: "-" }]))) {
+        item = Transform.getCompareNode(item);
+      }
       let render = Transform.renderCompareOperand(item, isQuery);
-      if (phpEmpty(sep) && !phpEmpty(item.pipes)) render = `(${render})`;
+
+      // A filtered value keeps its parentheses where it is a whole operand:
+      // where the author wrote them, first, after a `!`, or directly after a
+      // comparison. Never after a `-`, binary or sign: a filter applies to the
+      // chain so far.
+      const first = phpEmpty(sep) && last !== "-";
+      if (!phpEmpty(item.pipes) && (grouped || first || [">", ">=", "<", "<=", "!==", "!=", "===", "=="].includes(last ?? ""))) {
+        render = `(${render})`;
+      }
+      last = render;
       if (render.endsWith(")") && render.startsWith("[")) sep = "";
       items.push(sep + render);
       sep = render === "-" || render === "!" ? "" : " ";
@@ -1719,14 +1812,25 @@ export const Transform = {
     return parts;
   },
 
-  renderCompareOperand(value: XtItem, isQuery = false, wrapPipes = false, _wrapMultiline = false): string {
+  /**
+   * A group shaped like the one the expression parser makes by itself around
+   * a `*` or `/` product: the operator is the second item. The caller renders
+   * such a group bare only where the parser could have made it.
+   */
+  isProductGroup(value: XtItem): boolean {
+    const op = ((value.group as XtItem[])[1] ?? null) as XtItem | null;
+    return ["*", "/"].includes(op?.node ?? null) && (op?.hint ?? "") !== "text";
+  },
+
+  /** `entry`: the value is an item of a list, object, ternary or filter-argument entry, or the only item inside parentheses. */
+  renderCompareOperand(value: XtItem, isQuery = false, wrapPipes = false, _wrapMultiline = false, entry = false): string {
     let parts: string[];
     if ("array" in value) {
       parts = [];
       for (const entry of value.array as XtItem[]) {
         const items: string[] = [];
         for (const arrayEntry of (entry["array:entry"] as XtItem[]) ?? []) {
-          items.push(Transform.renderCompareOperand(arrayEntry, isQuery, wrapPipes));
+          items.push(Transform.renderCompareOperand(arrayEntry, isQuery, wrapPipes, false, true));
         }
         parts.push(items.join(" "));
       }
@@ -1734,25 +1838,33 @@ export const Transform = {
       parts = ["[" + parts.join(", ") + "]"];
     } else if ("tenary" in value) {
       let left: string[] = [];
-      for (const entry of (value.tenary.left as XtItem[]) ?? []) left.push(Transform.renderCompareOperand(entry, isQuery, wrapPipes));
+      for (const entry of (value.tenary.left as XtItem[]) ?? []) left.push(Transform.renderCompareOperand(entry, isQuery, wrapPipes, false, true));
       left = Transform.filterCompareParts(left);
       let right: string[] = [];
-      for (const entry of (value.tenary.right as XtItem[]) ?? []) right.push(Transform.renderCompareOperand(entry, isQuery, wrapPipes));
+      for (const entry of (value.tenary.right as XtItem[]) ?? []) right.push(Transform.renderCompareOperand(entry, isQuery, wrapPipes, false, true));
       right = Transform.filterCompareParts(right);
       parts = ["? " + left.join(" ") + " : " + right.join(" ")];
       if (isQuery) throw new NotSupportedError("Tenary syntax is not supported in this context: " + parts.join(""));
     } else if ("group" in value) {
+      // The parser's own group around a product is not the author's: inside
+      // an entry it renders bare, and so does the one inside parentheses that
+      // hold nothing else.
+      const bare = entry && Transform.isProductGroup(value);
       parts = [];
       let last: string | null = null;
       let i = 0;
       const len = count(value.group);
-      for (const entry of value.group as XtItem[]) {
-        let ret = Transform.renderCompareOperand(entry, isQuery, true);
+      for (const groupEntry of value.group as XtItem[]) {
+        // Only the LEFT operand of a bare product can be the parser's own
+        // group (products nest to the left); a group on the right is the author's.
+        let ret = Transform.renderCompareOperand(groupEntry, isQuery, true, false, (bare && i === 0) || (len === 1 && phpEmpty(groupEntry.pipes)));
         if (parts.length) {
           if (!(last === "!" || last === "-")) parts.push(" ");
         }
-        if (i !== len - 1) {
-          if (!phpEmpty(entry.pipes)) ret = `(${ret})`;
+        // A bare product has no closing parenthesis after its last item, so a
+        // filter there would take what follows: wrap it too.
+        if (i !== len - 1 || bare) {
+          if (!phpEmpty(groupEntry.pipes)) ret = `(${ret})`;
         }
         parts.push(ret);
         if (ret === "-" && !(last === "&&" || last === "||")) last = null;
@@ -1760,15 +1872,15 @@ export const Transform = {
         i++;
       }
       parts = Transform.filterCompareParts(parts);
-      parts = ["(" + parts.join("") + ")"];
+      parts = [bare ? parts.join("") : "(" + parts.join("") + ")"];
     } else if ("object" in value) {
       parts = [];
       for (const entry of value.object as XtItem[]) {
         let left: string[] = [];
-        for (const objEntry of (entry["object:entry"]?.left as XtItem[]) ?? []) left.push(Transform.renderCompareOperand(objEntry, isQuery, wrapPipes));
+        for (const objEntry of (entry["object:entry"]?.left as XtItem[]) ?? []) left.push(Transform.renderCompareOperand(objEntry, isQuery, wrapPipes, false, true));
         left = Transform.filterCompareParts(left);
         let right: string[] = [];
-        for (const objEntry of (entry["object:entry"]?.right as XtItem[]) ?? []) right.push(Transform.renderCompareOperand(objEntry, isQuery, wrapPipes));
+        for (const objEntry of (entry["object:entry"]?.right as XtItem[]) ?? []) right.push(Transform.renderCompareOperand(objEntry, isQuery, wrapPipes, false, true));
         right = Transform.filterCompareParts(right);
         parts.push(left.join(" ") + ": " + right.join(" "));
       }
@@ -1802,7 +1914,7 @@ export const Transform = {
     const parts: string[] = [];
     let last = "";
     for (const entry of (value["arg:entry"] as XtItem[]) ?? []) {
-      let next = Transform.renderCompareOperand(entry, isQuery);
+      let next = Transform.renderCompareOperand(entry, isQuery, false, false, true);
       switch (last) {
         case "!":
         case "-":

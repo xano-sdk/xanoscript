@@ -59,6 +59,8 @@ class XtParser {
   tenaryLeftTempStack: XtItem[] = [];
   tenaryRightTempStack: XtItem[] = [];
   autoGroup = false;
+  /** How many trailing items the armed auto-group takes: left, operator, right, plus one per prefix operator on the right operand (`$a * -3` is four). */
+  autoGroupSize = 3;
   hint = "any";
   spread = false;
   lastMode = "";
@@ -113,11 +115,33 @@ class XtParser {
 
   private processAutoGroup(): void {
     if (this.autoGroup) {
-      this.autoGroup = false;
       const stack = this.isArgsMode() ? this.argTempStack : this.getActiveStack();
-      const group = stack.splice(-3);
-      stack.push(create("group", group));
+      this.groupProduct(stack);
     }
+  }
+
+  /**
+   * Wraps the product an armed `*` or `/` just completed, on the stack its
+   * right operand landed on: in a list, an object, a ternary branch and a
+   * filter argument that is the entry's own temp stack, not the active one.
+   */
+  private groupProduct(stack: XtItem[]): void {
+    if (!this.autoGroup) return;
+    this.autoGroup = false;
+    const size = this.autoGroupSize;
+    this.autoGroupSize = 3;
+    const group = stack.splice(-size);
+    stack.push(create("group", group));
+  }
+
+  /** groupProduct for an entry's own temp stack; a product missing its left operand there (`[* 3]`, `[[1, 2] * 3]`) stays flat. */
+  private groupEntryProduct(stack: XtItem[]): void {
+    if (this.autoGroup && stack.length < this.autoGroupSize) {
+      this.autoGroup = false;
+      this.autoGroupSize = 3;
+      return;
+    }
+    this.groupProduct(stack);
   }
 
   addItem(emptyOk = false, pushTemp = false): void {
@@ -174,6 +198,7 @@ class XtParser {
       }
       case "args":
         this.argTempStack.push(create("node", entry, [], hint));
+        this.groupEntryProduct(this.argTempStack);
         if (pushTemp) this.cleanupArgs();
         break;
       default:
@@ -185,9 +210,11 @@ class XtParser {
     switch (this.tenaryDirection) {
       case "left":
         this.tenaryLeftTempStack.push(entry);
+        this.groupEntryProduct(this.tenaryLeftTempStack);
         break;
       case "right":
         this.tenaryRightTempStack.push(entry);
+        this.groupEntryProduct(this.tenaryRightTempStack);
         if (pushTemp) this.cleanupTenary();
         break;
     }
@@ -197,9 +224,11 @@ class XtParser {
     switch (this.objectDirection) {
       case "left":
         this.objectLeftTempStack.push(entry);
+        this.groupEntryProduct(this.objectLeftTempStack);
         break;
       case "right":
         this.objectRightTempStack.push(entry);
+        this.groupEntryProduct(this.objectRightTempStack);
         if (pushTemp) this.cleanupObject(true, spread);
         break;
     }
@@ -207,14 +236,25 @@ class XtParser {
 
   private addArrayItem(entry: XtItem, pushTemp = false, spread = false): void {
     this.arrayTempStack.push(entry);
+    this.groupEntryProduct(this.arrayTempStack);
     if (pushTemp) this.cleanupArray(true, spread);
   }
 
   addOperator(op: string, changeMode = true): void {
     if (changeMode) this.setNodeMode();
     this.addItem();
+
+    // Still armed after the left operand was flushed: this operator is a
+    // prefix of the right operand (`$a * -3`). It joins the product; pushing
+    // it must not close the group.
+    const armed = this.autoGroup;
+    if (armed) this.autoGroupSize++;
+    this.autoGroup = false;
+
     this.entry = op;
     this.addItem();
+
+    this.autoGroup = armed;
     if (op === "*" || op === "/") this.autoGroup = true;
   }
 
@@ -229,7 +269,9 @@ class XtParser {
       this.addObjectItem(create("group", stackItems), this.spread, this.spread);
       this.spread = false;
     } else if (this.isArrayMode()) {
-      this.addArrayItem(create("group", stackItems), true, this.spread);
+      // Not pushTemp: the `,` or `]` closes the entry (`[($a + 1) * 2]`). A
+      // spread is still closed here, as in an object.
+      this.addArrayItem(create("group", stackItems), this.spread, this.spread);
       this.spread = false;
     } else {
       this.getActiveStack().push(create("group", stackItems));

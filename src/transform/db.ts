@@ -209,9 +209,12 @@ export const DB = {
   },
 
   onOutput(data: unknown, blocks: KindNode[]): void {
-    const d = (data ?? {}) as Record<string, unknown>;
+    // Deep: an output is names and children only, and `children: {}` left as
+    // an empty object reads as non-empty to flattenOutput, which then drops
+    // that field.
+    const d = (Transform.objectToArray(data, true) ?? {}) as Record<string, unknown>;
     if (phpEmpty(d.customize)) return;
-    blocks.push({ name: "output", kind: "static:text[]", value: DB.flattenOutput(d.items) });
+    blocks.push({ name: "output", kind: "static:text[]", value: DB.flattenOutput(d.items ?? []) });
   },
 
   flattenOutput(output: unknown, prefix: string[] = []): string[] {
@@ -278,18 +281,19 @@ export const DB = {
     return out;
   },
 
-  onSearch(data: unknown, blocks: KindNode[], renameMap: Record<string, string> = {}): void {
+  onSearch(dataIn: unknown, blocks: KindNode[], renameMap: Record<string, string> = {}): void {
+    const data = Transform.objectToArray(dataIn);
     if (phpEmpty(data)) return;
     const d = data as Record<string, unknown>;
-    if (phpEmpty(d.expression ?? [])) return;
+    if (phpEmpty(Transform.objectToArray(d.expression ?? []))) return;
     const renamed = DB.renameSearch(d, renameMap);
     const value = Transform.createInlineComparison(renamed, true, false);
     blocks.push({ name: "where", kind: "assign:expr", value });
   },
 
   onLock(dataIn: unknown, blocks: KindNode[]): void {
-    if (phpEmpty(dataIn)) return;
-    let data = dataIn as Record<string, unknown>;
+    let data = Transform.objectToArray(dataIn) as Record<string, unknown>;
+    if (phpEmpty(data)) return;
     const tag = String(data.tag ?? "");
     const invalidTags = ["action"];
     const isEmptyConst = tag === "const" && phpEmpty(data.value) && phpEmpty(data.filters);

@@ -658,7 +658,8 @@ export const Assign = {
     if (!Parser.isWrappedInBrackets(right)) return false;
     const s = right as string;
     const inner = mbSubstr(s, 1, -1);
-    if (phpEmpty(trim(inner))) return { kind: "static:array", name: left, value: [] };
+    // "" only: [0] must reach the array parser, not the empty-literal branch.
+    if (trim(inner) === "") return { kind: "static:array", name: left, value: [] };
     const ret = StaticArray.parse(inner);
     const kind = left === "expr" || left === "value" ? "static:array" : ret.kind;
     return { kind, name: left, value: ret.value, raw: normalizeIndent(s, true) };

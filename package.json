@@ -1,6 +1,6 @@
 {
   "name": "@xano-sdk/xanoscript",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Renders a Xano SDK workspace to XanoScript — the language the Xano engine runs. A file-for-file port of the engine's encoder, proven byte-for-byte against the engine's own golden corpus.",
   "type": "module",
   "license": "MIT",

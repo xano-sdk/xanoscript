@@ -70,5 +70,21 @@ function onSchemaHistory(item: Record<string, unknown>, schema: KindNode): void 
     }
   }
 
+  // Prompt and resource history are emitted ONLY when they differ from the
+  // default (enabled, limit 100); an absent line reads as the default.
+  for (const key of ["prompt", "resource"]) {
+    const enabled = mapperGet("history." + key + "_enabled", item, null);
+    const limit = mapperGet("history." + key + "_limit", item, null);
+    if (enabled === false) {
+      blocks.push(Transform.inlineAssign(key, false, "static:bool"));
+      continue;
+    }
+
+    // Strict: 100 (the default) and anything the grammar cannot express stay silent.
+    if (!(limit === -1 || limit === 0 || limit === 10 || limit === 1000 || limit === 10000)) continue;
+
+    blocks.push(limit === -1 ? Transform.inlineAssign(key, "all", "static:text") : Transform.inlineAssign(key, limit, "static:int"));
+  }
+
   (schema.blocks as KindNode[]).push(Transform.createStaticObject("history", blocks));
 }

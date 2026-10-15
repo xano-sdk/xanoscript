@@ -30,6 +30,10 @@ export interface ScriptMaps {
   trigger?: Record<string, unknown>;
   tool?: Record<string, unknown>;
   toolset?: Record<string, unknown>;
+  /** MCP prompts, keyed by name. */
+  prompt?: Record<string, unknown>;
+  /** MCP resources, keyed by name. */
+  resource?: Record<string, unknown>;
   middleware?: Record<string, unknown>;
   /** v1 realtime channels, keyed by pattern. */
   channel?: Record<string, unknown>;
@@ -78,6 +82,8 @@ export class ScriptContext {
     trigger: {},
     tool: {},
     toolset: {},
+    prompt: {},
+    resource: {},
     middleware: {},
     channel: {},
     realtimeServer: {},
@@ -322,6 +328,12 @@ export class ScriptContext {
   }
   mapIdToToolsetName(id: unknown, doThrow = true): string {
     return this.idToName("toolset", id, doThrow, "toolset");
+  }
+  mapIdToPromptName(id: unknown): string {
+    return this.idToName("prompt", id, true, "prompt");
+  }
+  mapIdToResourceName(id: unknown): string {
+    return this.idToName("resource", id, true, "resource");
   }
   mapIdToMiddlewareName(id: unknown): string {
     return this.idToName("middleware", id, true, "middleware");

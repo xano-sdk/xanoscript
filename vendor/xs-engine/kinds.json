@@ -520,6 +520,17 @@
     "$value": "Response"
    }
   },
+  "component/rule": {
+   "blocks": {
+    "title?": "static:text",
+    "check": "static:text",
+    "params?": "static:json"
+   },
+   "transform": {
+    "$tag": "class",
+    "$value": "PolicyRule"
+   }
+  },
   "component/schema": {
    "blocks": {
     "$tag": "kinds",
@@ -846,6 +857,16 @@
       "static:bool",
       "static:int",
       "static:text"
+     ],
+     "prompt?": [
+      "static:bool",
+      "static:int",
+      "static:text"
+     ],
+     "resource?": [
+      "static:bool",
+      "static:int",
+      "static:text"
      ]
     }
    },
@@ -1086,6 +1107,35 @@
       "tool_meta?": "static:text"
      }
     },
+    "prompts?": {
+     "$tag": "static:objects",
+     "$value": {
+      "name": "static:text",
+      "active?": "static:bool",
+      "auth?": "static:text"
+     }
+    },
+    "resources?": {
+     "$tag": "static:objects",
+     "$value": {
+      "name": "static:text",
+      "active?": "static:bool",
+      "auth?": "static:text"
+     }
+    },
+    "oauth?": {
+     "mode?": "static:text",
+     "auth_table?": "static:text",
+     "login_url?": "static:text",
+     "issuer?": "static:text",
+     "audience?": "static:text[]",
+     "audience_ack?": "static:bool",
+     "claim?": "static:text",
+     "claim_ack?": "static:bool",
+     "column?": "static:text",
+     "preset?": "static:text",
+     "allowed_client_ids?": "static:text[]"
+    },
     "history?": [
      "static:bool",
      "static:int",
@@ -1231,6 +1281,81 @@
     "$value": "Middleware"
    }
   },
+  "core/policy": {
+   "args": {
+    "name": "static:text"
+   },
+   "blocks": {
+    "title?": "static:text",
+    "statement?": "static:text",
+    "rationale?": "static:text",
+    "narrative?": "static:text",
+    "severity?": "static:text",
+    "active?": "static:bool",
+    "enforcement?": "static:text",
+    "tags?": "static:text[]",
+    "rule?": "schema:rule"
+   },
+   "repeating_blocks": [
+    "rule"
+   ],
+   "transform": {
+    "$tag": "class",
+    "$value": "Policy"
+   }
+  },
+  "core/prompt": {
+   "args": {
+    "name": "static:text"
+   },
+   "blocks": {
+    "description?": "static:text",
+    "title?": "static:text",
+    "icons?": {
+     "$tag": "static:objects",
+     "$value": {
+      "src": "static:text",
+      "mime_type?": "static:text",
+      "sizes?": "static:text[]",
+      "theme?": "static:text"
+     }
+    },
+    "input": "schema:input",
+    "stack": "schema:stack",
+    "response?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "guid?": "static:text",
+    "tags?": "static:text[]",
+    "docs?": "static:text",
+    "history?": [
+     "static:bool",
+     "static:int",
+     "static:text"
+    ],
+    "middleware?": {
+     "pre?": {
+      "$tag": "static:objects",
+      "$value": {
+       "name?": "static:text",
+       "active?": "static:bool"
+      }
+     },
+     "post?": {
+      "$tag": "static:objects",
+      "$value": {
+       "name?": "static:text",
+       "active?": "static:bool"
+      }
+     }
+    }
+   },
+   "transform": {
+    "$tag": "class",
+    "$value": "Prompt"
+   }
+  },
   "core/query": {
    "args": {
     "name": "static:text",
@@ -1255,6 +1380,7 @@
      "static:int",
      "static:text"
     ],
+    "external_access?": "static:bool",
     "cache?": {
      "ttl?=3600": "static:int",
      "input?=true": "static:bool",
@@ -1416,6 +1542,68 @@
    "transform": {
     "$tag": "class",
     "$value": "RealtimeTrigger"
+   }
+  },
+  "core/resource": {
+   "args": {
+    "name": "static:text"
+   },
+   "blocks": {
+    "description?": "static:text",
+    "title?": "static:text",
+    "uri": "static:text",
+    "mime_type?": "static:text",
+    "annotations?": {
+     "audience?": "static:text[]",
+     "priority?": [
+      "static:decimal",
+      "static:int"
+     ],
+     "last_modified?": "static:text"
+    },
+    "icons?": {
+     "$tag": "static:objects",
+     "$value": {
+      "src": "static:text",
+      "mime_type?": "static:text",
+      "sizes?": "static:text[]",
+      "theme?": "static:text"
+     }
+    },
+    "input?": "schema:input",
+    "stack": "schema:stack",
+    "response?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "guid?": "static:text",
+    "tags?": "static:text[]",
+    "docs?": "static:text",
+    "history?": [
+     "static:bool",
+     "static:int",
+     "static:text"
+    ],
+    "middleware?": {
+     "pre?": {
+      "$tag": "static:objects",
+      "$value": {
+       "name?": "static:text",
+       "active?": "static:bool"
+      }
+     },
+     "post?": {
+      "$tag": "static:objects",
+      "$value": {
+       "name?": "static:text",
+       "active?": "static:bool"
+      }
+     }
+    }
+   },
+   "transform": {
+    "$tag": "class",
+    "$value": "Resource"
    }
   },
   "core/run.job": {
@@ -1616,12 +1804,29 @@
    },
    "blocks": {
     "description?": "static:text",
+    "title?": "static:text",
+    "annotations?": {
+     "read_only_hint?": "static:bool",
+     "destructive_hint?": "static:bool",
+     "idempotent_hint?": "static:bool",
+     "open_world_hint?": "static:bool"
+    },
+    "icons?": {
+     "$tag": "static:objects",
+     "$value": {
+      "src": "static:text",
+      "mime_type?": "static:text",
+      "sizes?": "static:text[]",
+      "theme?": "static:text"
+     }
+    },
     "input": "schema:input",
     "stack": "schema:stack",
     "response?": {
      "$tag": "kinds",
      "$value": "assign"
     },
+    "output?": "schema:output",
     "guid?": "static:text",
     "tags?": "static:text[]",
     "docs?": "static:text",
@@ -6285,6 +6490,43 @@
     }
    }
   },
+  "statement/db.increment": {
+   "alias": "mvp:dbo_increment",
+   "args": {
+    "as?": "static:text",
+    "name?": "static:text"
+   },
+   "blocks": {
+    "description?": "static:text",
+    "disabled?": "static:bool",
+    "where?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "field_name": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "value": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "return?": {
+     "type?": "static:text"
+    },
+    "output?": "static:text[]",
+    "addon?": [
+     "static:object",
+     "static:object[]",
+     "assign:expr"
+    ],
+    "mock?": "assign:object"
+   },
+   "transform": {
+    "$tag": "class",
+    "$value": "DbIncrement"
+   }
+  },
   "statement/db.patch": {
    "alias": "mvp:dbo_patch",
    "args": {
@@ -6894,6 +7136,186 @@
      "value": {
       "$tag": "assign",
       "$value": "context"
+     }
+    }
+   }
+  },
+  "statement/mcp.elicit": {
+   "alias": "mvp:mcp_elicit",
+   "args": {
+    "as?": "static:text"
+   },
+   "blocks": {
+    "description?": "static:text",
+    "disabled?": "static:bool",
+    "key": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "message": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "input?": "schema:input",
+    "mock?": "assign:object"
+   },
+   "transform": {
+    "$tag": "class",
+    "$value": "McpElicit"
+   }
+  },
+  "statement/mcp.oauth.complete": {
+   "alias": "mvp:mcp_oauth_complete",
+   "args": {
+    "as?": "static:text"
+   },
+   "blocks": {
+    "description?": "static:text",
+    "disabled?": "static:bool",
+    "request": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "decision": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "unsafe_user_id?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "mock?": "assign:object"
+   },
+   "transform": {
+    "args": {
+     "as?=''": "as"
+    },
+    "blocks": {
+     "request": {
+      "$tag": "assign",
+      "$value": "input.request"
+     },
+     "decision": {
+      "$tag": "assign",
+      "$value": "input.decision"
+     },
+     "unsafe_user_id?": {
+      "$tag": "assign",
+      "$value": "input.unsafe_user_id"
+     }
+    }
+   }
+  },
+  "statement/mcp.oauth.request": {
+   "alias": "mvp:mcp_oauth_request",
+   "args": {
+    "as?": "static:text"
+   },
+   "blocks": {
+    "description?": "static:text",
+    "disabled?": "static:bool",
+    "request": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "mock?": "assign:object"
+   },
+   "transform": {
+    "args": {
+     "as?=''": "as"
+    },
+    "blocks": {
+     "request": {
+      "$tag": "assign",
+      "$value": "input.request"
+     }
+    }
+   }
+  },
+  "statement/mcp.oauth.revoke": {
+   "alias": "mvp:mcp_oauth_revoke",
+   "args": {
+    "as?": "static:text"
+   },
+   "blocks": {
+    "description?": "static:text",
+    "disabled?": "static:bool",
+    "mcp_server": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "user_id?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "grant_id?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "all?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "mock?": "assign:object"
+   },
+   "transform": {
+    "args": {
+     "as?=''": "as"
+    },
+    "blocks": {
+     "mcp_server": {
+      "$tag": "assign",
+      "$value": "input.mcp_server"
+     },
+     "user_id?": {
+      "$tag": "assign",
+      "$value": "input.user_id"
+     },
+     "grant_id?": {
+      "$tag": "assign",
+      "$value": "input.grant_id"
+     },
+     "all?": {
+      "$tag": "assign",
+      "$value": "input.all"
+     }
+    }
+   }
+  },
+  "statement/mcp.progress": {
+   "alias": "mvp:mcp_progress",
+   "args": [],
+   "blocks": {
+    "description?": "static:text",
+    "disabled?": "static:bool",
+    "progress": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "total?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "message?": {
+     "$tag": "kinds",
+     "$value": "assign"
+    },
+    "mock?": "assign:object"
+   },
+   "transform": {
+    "args": [],
+    "blocks": {
+     "progress": {
+      "$tag": "assign",
+      "$value": "input.progress"
+     },
+     "total?": {
+      "$tag": "assign",
+      "$value": "input.total"
+     },
+     "message?": {
+      "$tag": "assign",
+      "$value": "input.message"
      }
     }
    }
