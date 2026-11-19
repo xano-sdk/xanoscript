@@ -1,6 +1,6 @@
 {
   "name": "@xano-sdk/xanoscript",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Renders a Xano SDK workspace to XanoScript — the language the Xano engine runs. A file-for-file port of the engine's encoder, proven byte-for-byte against the engine's own golden corpus.",
   "type": "module",
   "license": "MIT",
@@ -76,7 +76,7 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
-    "@xano/sdk": "1.0.0",
+    "@xano/sdk": "1.0.19",
     "eslint": "^9.0.0",
     "tsup": "^8.0.0",
     "tsx": "^4.23.1",

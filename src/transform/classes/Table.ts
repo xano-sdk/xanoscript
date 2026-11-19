@@ -17,6 +17,9 @@ export function Table(data: Record<string, unknown>): KindNode {
 
   blocks.push(Transform.inlineAssign("auth", data.auth ?? false, "static:bool"));
 
+  // the custom SQL table name, only when the table has one
+  if (!phpEmpty(data.sql_name)) blocks.push(Transform.inlineAssign("sql_name", data.sql_name));
+
   blocks.push(Transform.convertToKind("schema:schema", data.schema));
 
   createToSchemaTableIndex(ret, data.index ?? [], !phpEmpty(data.schema));

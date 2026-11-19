@@ -3,7 +3,7 @@
 Renders a [Xano SDK](https://github.com/xano-sdk/sdk) workspace to **XanoScript** —
 the language the Xano engine actually runs.
 
-> **Status: 1.0.x.** A toolchain module for the Xano SDK (`@xano/sdk` `>=1.0.0 <2.0.0`):
+> **Status: 1.0.x.** A toolchain module for the Xano SDK (`@xano/sdk` `>=1.0.0 <2.0.0`, built and tested against **1.0.19**):
 > the emitter and the `./plugin` entry the CLI loads.
 
 ## Use it
@@ -28,7 +28,7 @@ source beside it.
 
 The emitter is a **file-for-file port of the Xano engine's own JSON → XanoScript
 encoder**, pinned to one engine commit. Its contract is not "looks right" — it is
-**byte equality with the engine**, proven against 1,305 of the engine's own
+**byte equality with the engine**, proven against 1,303 of the engine's own
 golden fixtures on every run.
 
 That is what makes a committed `xanoscript/` tree worth reading: a backend change

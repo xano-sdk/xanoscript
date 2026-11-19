@@ -1606,48 +1606,6 @@
     "$value": "Resource"
    }
   },
-  "core/run.job": {
-   "args": {
-    "name": "static:text"
-   },
-   "blocks": {
-    "description?": "static:text",
-    "main": {
-     "name": "static:text",
-     "input?": "static:json",
-     "as?": "static:text"
-    },
-    "pre?": {
-     "name": "static:text",
-     "as?": "static:text"
-    },
-    "post?": {
-     "name": "static:text"
-    },
-    "env?": "static:text[]"
-   },
-   "transform": {
-    "$tag": "class",
-    "$value": "RunJob"
-   }
-  },
-  "core/run.service": {
-   "args": {
-    "name": "static:text"
-   },
-   "blocks": {
-    "description?": "static:text",
-    "pre?": {
-     "name": "static:text",
-     "as?": "static:text"
-    },
-    "env?": "static:text[]"
-   },
-   "transform": {
-    "$tag": "class",
-    "$value": "RunService"
-   }
-  },
   "core/table": {
    "args": {
     "name": "static:text"
@@ -1657,6 +1615,7 @@
     "agent?": "static:text",
     "schema": "schema:schema",
     "auth?": "static:bool",
+    "sql_name?": "static:text",
     "guid?": "static:text",
     "tags?": "static:text[]",
     "docs?": "static:text",

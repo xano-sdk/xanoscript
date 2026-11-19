@@ -14,8 +14,6 @@ import { GetRawInput } from "./GetRawInput.js";
 import { MarketItem } from "./MarketItem.js";
 import { McpElicit } from "./McpElicit.js";
 import { MiddlewareCall } from "./MiddlewareCall.js";
-import { RunJob } from "./RunJob.js";
-import { RunService } from "./RunService.js";
 import { StackExpectToThrow } from "./StackExpectToThrow.js";
 import { TaskCall } from "./TaskCall.js";
 import { ToolCall } from "./ToolCall.js";
@@ -37,8 +35,6 @@ export const CALL_CLASSES: Record<string, ClassEncoder> = {
   MarketItem,
   McpElicit,
   MiddlewareCall,
-  RunJob,
-  RunService,
   StackExpectToThrow,
   TaskCall,
   ToolCall,
